@@ -126,8 +126,8 @@ namespace EncryptionTest
             // Dispose of the object when we are done
             zip.Dispose();
         }
-        
-        private void RunProcess(string cmd,DirectoryInfo source, DirectoryInfo target)
+
+        private void RunProcess(string cmd, DirectoryInfo source, DirectoryInfo target)
         {            
             foreach (DirectoryInfo dir in source.GetDirectories())
             {
@@ -154,6 +154,37 @@ namespace EncryptionTest
 
             _tasks.Add(newTask);
         }
+
+        private void RunProcess(string cmd, string source, string target)
+        {
+            DirectoryInfo s = new DirectoryInfo(source);
+            DirectoryInfo t = new DirectoryInfo(target);
+
+            foreach (DirectoryInfo sourceDirPath in s.GetDirectories())
+            {
+                RunProcess(cmd, sourceDirPath.FullName, t.CreateSubdirectory(s.Name).FullName);
+            }
+
+            var newTask = Task.Factory.StartNew(() =>
+            {
+                Parallel.ForEach(s.GetFiles(), file => {
+                    switch (cmd)
+                    {
+                        case "0":
+                            Encrypt(file.FullName, string.Format(@"{0}\{1}", t.FullName, file.Name));
+                            break;
+
+                        case "1":
+                            Decrypt(file.FullName, string.Format(@"{0}\{1}", t.FullName, file.Name));
+                            break;
+                    }
+                });
+
+            });
+
+            _tasks.Add(newTask);
+        }
+           
 
         private void Test()
         {
@@ -211,13 +242,16 @@ namespace EncryptionTest
                 DateTime startTime = DateTime.Now;
                 WriteLog(string.Format("********************** Starting Process at {0}", DateTime.Now.ToShortTimeString()));
 
-                DirectoryInfo source = new DirectoryInfo(txtToEncrypt.Text);
-                DirectoryInfo target = new DirectoryInfo(txtOutputFolder.Text);
-                foreach (DirectoryInfo dir in source.GetDirectories())
+                //DirectoryInfo source = new DirectoryInfo(txtToEncrypt.Text);
+                //DirectoryInfo target = new DirectoryInfo(txtOutputFolder.Text);
+                //foreach (DirectoryInfo dir in source.GetDirectories())
+                //{
+                //    RunProcess(cmd.Tag.ToString(), dir, target.CreateSubdirectory(dir.Name));
+                //}
+                foreach (string dirPath in Directory.GetDirectories(txtToEncrypt.Text))
                 {
-                    RunProcess(cmd.Tag.ToString(), dir, target.CreateSubdirectory(dir.Name));
+                    RunProcess(cmd.Tag.ToString(), string.Format(@"\\?\{0}",dirPath), string.Format(@"\\?\{0}", txtOutputFolder.Text));
                 }
-
                 Task.WaitAll(_tasks.ToArray());
 
                 WriteLog(string.Format("********************** Ending Process at {0}", DateTime.Now.ToShortTimeString()));
