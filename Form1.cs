@@ -242,16 +242,15 @@ namespace EncryptionTest
                 DateTime startTime = DateTime.Now;
                 WriteLog(string.Format("********************** Starting Process at {0}", DateTime.Now.ToShortTimeString()));
 
-                //DirectoryInfo source = new DirectoryInfo(txtToEncrypt.Text);
-                //DirectoryInfo target = new DirectoryInfo(txtOutputFolder.Text);
-                //foreach (DirectoryInfo dir in source.GetDirectories())
-                //{
-                //    RunProcess(cmd.Tag.ToString(), dir, target.CreateSubdirectory(dir.Name));
-                //}
+                //Parallel.ForEach(Directory.GetDirectories(txtToEncrypt.Text), dirPath => {
+                //    RunProcess(cmd.Tag.ToString(), string.Format(@"\\?\{0}", dirPath), string.Format(@"\\?\{0}", txtOutputFolder.Text));
+                //});
+
                 foreach (string dirPath in Directory.GetDirectories(txtToEncrypt.Text))
                 {
-                    RunProcess(cmd.Tag.ToString(), string.Format(@"\\?\{0}",dirPath), string.Format(@"\\?\{0}", txtOutputFolder.Text));
+                    RunProcess(cmd.Tag.ToString(), string.Format(@"\\?\{0}", dirPath), string.Format(@"\\?\{0}", txtOutputFolder.Text));
                 }
+
                 Task.WaitAll(_tasks.ToArray());
 
                 WriteLog(string.Format("********************** Ending Process at {0}", DateTime.Now.ToShortTimeString()));
